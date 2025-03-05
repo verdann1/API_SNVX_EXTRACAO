@@ -53,7 +53,7 @@ class SamplesStatsSerializer(serializers.Serializer):
     total_samples = serializers.IntegerField()
     samples_by_assembly = serializers.ListField(
         child=serializers.DictField(
-            child=serializers.IntegerField(),  # Agora aceita IDs (inteiros)
+            child=serializers.CharField(),  # Altere aqui para CharField
             allow_empty=True
         )
     )

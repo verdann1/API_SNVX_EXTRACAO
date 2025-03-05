@@ -29,24 +29,29 @@ class SamplesStatsView(views.APIView):
     queryset = Sample.objects.all()
 
     def get(self, request):
-        # Usar 'assembly__id' em vez de 'assembly__name'
-        samples_by_assembly = Sample.objects.values('assembly__id').annotate(
+        total_samples = self.queryset.count()
+        samples_by_assembly = self.queryset.values('assembly__name').annotate(
             count=Count('id')
-        ).order_by('assembly__id')
+        ).order_by('assembly__name')
 
-        # Formatar dados
-        data = {
-            'total_samples': Sample.objects.count(),
+        # Calcular total de produtos únicos associados a amostras
+        total_products = Product.objects.filter(samples__isnull=False).distinct().count()
+
+        # Formatar dados para o serializer
+        formatted_data = {
+            'total_samples': total_samples,
             'samples_by_assembly': [
                 {
-                    'assembly_id': item['assembly__id'],  # Renomear para 'assembly_id'
+                    'assembly_name': item['assembly__name'],  # Certifique-se de usar strings aqui
                     'count': item['count']
                 }
                 for item in samples_by_assembly
             ],
-            'total_products': Product.objects.filter(samples__isnull=False).distinct().count()
+            'total_products': total_products
         }
 
-        serializer = SamplesStatsSerializer(data=data)
+        # Validar e retornar
+        serializer = SamplesStatsSerializer(data=formatted_data)
         serializer.is_valid(raise_exception=True)
-        return response.Response(serializer.data)
+        return response.Response(serializer.data, status=status.HTTP_200_OK)
+    
