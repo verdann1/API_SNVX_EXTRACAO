@@ -29,12 +29,11 @@ class SamplesStatsView(views.APIView):
     queryset = Sample.objects.all()
 
     def get(self, request):
-        # Corrigir agregações para usar 'assembly' (conforme o modelo real)
         total_samples = self.queryset.count()
         samples_by_assembly = self.queryset.values('assembly__name').annotate(
             count=Count('id')
         ).order_by('assembly__name')
-
+        
         # Calcular total de produtos únicos associados a amostras
         total_products = Product.objects.filter(samples__isnull=False).distinct().count()
 
@@ -43,7 +42,7 @@ class SamplesStatsView(views.APIView):
             'total_samples': total_samples,
             'samples_by_assembly': [
                 {
-                    'assembly_name': item['assembly__name'],
+                    'assembly__name': item['assembly__name'],
                     'count': item['count']
                 }
                 for item in samples_by_assembly
