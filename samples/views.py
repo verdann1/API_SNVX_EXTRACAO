@@ -42,7 +42,7 @@ class SamplesStatsView(views.APIView):
             'total_samples': total_samples,
             'samples_by_assembly': [
                 {
-                    'assembly__name': item['assembly__name'],
+                    'assembly_name': item['assembly__name'],
                     'count': item['count']
                 }
                 for item in samples_by_assembly
@@ -53,4 +53,4 @@ class SamplesStatsView(views.APIView):
         # Validar e retornar
         serializer = SamplesStatsSerializer(data=formatted_data)
         serializer.is_valid(raise_exception=True)
-        return response.Response(serializer.data, status=status.HTTP_200_OK)
+        return

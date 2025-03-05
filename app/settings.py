@@ -44,10 +44,10 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
 
     'authentication',
-    'assembly',  # substituído de genres
-    'products',  # substituído de actors
-    'samples',  # substituído de movies
-    'results',  # substituído de reviews
+    'assembly',
+    'products',
+    'samples',
+    'results',
 ]
 
 MIDDLEWARE = [
