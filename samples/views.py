@@ -33,7 +33,7 @@ class SamplesStatsView(views.APIView):
         samples_by_assembly = self.queryset.values('assembly__name').annotate(
             count=Count('id')
         ).order_by('assembly__name')
-        
+
         # Calcular total de produtos únicos associados a amostras
         total_products = Product.objects.filter(samples__isnull=False).distinct().count()
 
@@ -53,4 +53,4 @@ class SamplesStatsView(views.APIView):
         # Validar e retornar
         serializer = SamplesStatsSerializer(data=formatted_data)
         serializer.is_valid(raise_exception=True)
-        return
+        return response.Response(serializer.data, status=status.HTTP_200_OK)
