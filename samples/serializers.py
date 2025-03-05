@@ -1,63 +1,80 @@
-from django.db.models import Avg
 from rest_framework import serializers
-from products.serializers import ProductSerializer
-from samples.models import Sample
-from assembly.models import Assembly
+from .models import Sample
 from assembly.serializers import AssemblySerializer
+from products.serializers import ProductSerializer
+from assembly.models import Assembly
 from products.models import Product
 
-
-class SamplesSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
-    title = serializers.CharField()
-    genre = serializers.PrimaryKeyRelatedField(
-        queryset=Assembly.objects.all(),
+class SamplesSerializer(serializers.ModelSerializer):
+    """
+    Serializer básico para operações de leitura/escrita simplificadas.
+    """
+    assembly = serializers.PrimaryKeyRelatedField(
+        queryset=Assembly.objects.all()
     )
-    release_date = serializers.DateField()
-    actors = serializers.PrimaryKeyRelatedField(
+    products = serializers.PrimaryKeyRelatedField(
         queryset=Product.objects.all(),
-        many=True,
+        many=True
     )
-    resume = serializers.CharField()
 
+    class Meta:
+        model = Sample
+        fields = ['id', 'assembly', 'products', 'created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at']
 
 class SamplesModelSerializer(serializers.ModelSerializer):
-
+    """
+    Serializer com validações específicas.
+    """
     class Meta:
         model = Sample
-        fields = '__all__'
+        fields = ['id', 'assembly', 'products', 'created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at']
 
-    def validate_release_date(self, value):
-        if value.year < 1900:
-            raise serializers.ValidationError('A data de lançamento não pode ser anterior a 1900.')
+    def validate_assembly(self, value):
+        # Exemplo de validação customizada
+        if not value.is_active:  # Assumindo que Assembly tenha um campo `is_active`
+            raise serializers.ValidationError("O assembly selecionado está inativo.")
         return value
-
-    def validate_resume(self, value):
-        if len(value) > 500:
-            raise serializers.ValidationError('Resumo não deve ser maior do que 500 caracteres.')
-        return value
-
 
 class SamplesListDetailSerializer(serializers.ModelSerializer):
-    actors = ProductSerializer(many=True)
-    genre = AssemblySerializer()
-    rate = serializers.SerializerMethodField(read_only=True)
+    """
+    Serializer detalhado com serialização aninhada para leitura.
+    """
+    assembly = AssemblySerializer()
+    products = ProductSerializer(many=True)
 
     class Meta:
         model = Sample
-        fields = ['id', 'title', 'genre', 'actors', 'release_date', 'rate', 'resume']
-
-    def get_rate(self, obj):
-        rate = obj.reviews.aggregate(Avg('stars'))['stars__avg']
-
-        if rate:
-            return round(rate, 1)
-
-        return None
-
+        fields = ['id', 'assembly', 'products', 'created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at']
 
 class SamplesStatsSerializer(serializers.Serializer):
-    total_movies = serializers.IntegerField()
-    movies_by_genre = serializers.ListField()
-    total_reviews = serializers.IntegerField()
-    average_stars = serializers.FloatField()
+    """
+    Serializer para estatísticas agregadas.
+    """
+    total_samples = serializers.IntegerField()
+    samples_by_assembly = serializers.ListField(
+        child=serializers.DictField()
+    )
+    total_products = serializers.IntegerField()
+
+class SampleCreateSerializer(serializers.ModelSerializer):
+    """
+    Serializer especializado para criação de amostras com produtos.
+    """
+    products = serializers.PrimaryKeyRelatedField(
+        queryset=Product.objects.all(),
+        many=True,
+        write_only=True
+    )
+
+    class Meta:
+        model = Sample
+        fields = ['assembly', 'products']
+
+    def create(self, validated_data):
+        products = validated_data.pop('products')
+        sample = super().create(validated_data)
+        sample.products.set(products)
+        return sample
