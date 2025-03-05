@@ -2,7 +2,6 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 
-
 class Assembly(models.Model):
     """
     Representa um assembly, identificado pelo seu nome.

@@ -4,9 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from app.permissions import GlobalDefaultPermission
 from samples.models import Sample
 from samples.serializers import SamplesModelSerializer, SamplesListDetailSerializer, SamplesStatsSerializer
-from results.models import Result
-from products import Product
-
+from products.models import Product
 
 class SamplesCreateListView(generics.ListCreateAPIView):
     permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
@@ -17,7 +15,6 @@ class SamplesCreateListView(generics.ListCreateAPIView):
             return SamplesListDetailSerializer
         return SamplesModelSerializer
 
-
 class SamplesRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
     queryset = Sample.objects.all()
@@ -26,7 +23,6 @@ class SamplesRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method == 'GET':
             return SamplesListDetailSerializer
         return SamplesModelSerializer
-
 
 class SamplesStatsView(views.APIView):
     permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
@@ -38,7 +34,7 @@ class SamplesStatsView(views.APIView):
         samples_by_assembly = self.queryset.values('assembly__name').annotate(
             count=Count('id')
         ).order_by('assembly__name')
-        
+
         # Calcular total de produtos únicos associados a amostras
         total_products = Product.objects.filter(samples__isnull=False).distinct().count()
 
@@ -59,4 +55,3 @@ class SamplesStatsView(views.APIView):
         serializer = SamplesStatsSerializer(data=formatted_data)
         serializer.is_valid(raise_exception=True)
         return response.Response(serializer.data, status=status.HTTP_200_OK)
-

@@ -2,7 +2,6 @@ from django.db import models
 from assembly.models import Assembly
 from products.models import Product
 
-
 class Sample(models.Model):
     """
     Representa uma amostra, vinculada a um assembly específico e associada a um ou mais produtos.
