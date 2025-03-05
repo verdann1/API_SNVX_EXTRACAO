@@ -50,12 +50,12 @@ class SamplesListDetailSerializer(serializers.ModelSerializer):
         read_only_fields = ['created_at', 'updated_at']
 
 class SamplesStatsSerializer(serializers.Serializer):
-    """
-    Serializer para estatísticas agregadas.
-    """
     total_samples = serializers.IntegerField()
     samples_by_assembly = serializers.ListField(
-        child=serializers.DictField()
+        child=serializers.DictField(
+            child=serializers.IntegerField(),
+            allow_empty=True
+        )
     )
     total_products = serializers.IntegerField()
 

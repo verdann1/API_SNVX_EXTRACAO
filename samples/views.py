@@ -5,6 +5,7 @@ from app.permissions import GlobalDefaultPermission
 from samples.models import Sample
 from samples.serializers import SamplesModelSerializer, SamplesListDetailSerializer, SamplesStatsSerializer
 from results.models import Result
+from products import Product
 
 
 class SamplesCreateListView(generics.ListCreateAPIView):
@@ -32,21 +33,30 @@ class SamplesStatsView(views.APIView):
     queryset = Sample.objects.all()
 
     def get(self, request):
-        total_movies = self.queryset.count()
-        movies_by_genre = self.queryset.values('genre__name').annotate(count=Count('id'))
-        total_reviews = Result.objects.count()
-        average_stars = Result.objects.aggregate(avg_stars=Avg('stars'))['avg_stars']
+        # Corrigir agregações para usar 'assembly' (conforme o modelo real)
+        total_samples = self.queryset.count()
+        samples_by_assembly = self.queryset.values('assembly__name').annotate(
+            count=Count('id')
+        ).order_by('assembly__name')
+        
+        # Calcular total de produtos únicos associados a amostras
+        total_products = Product.objects.filter(samples__isnull=False).distinct().count()
 
-        data = {
-            'total_movies': total_movies,
-            'movies_by_genre': movies_by_genre,
-            'total_reviews': total_reviews,
-            'average_stars': round(average_stars, 1) if average_stars else 0,
+        # Formatar dados para o serializer
+        formatted_data = {
+            'total_samples': total_samples,
+            'samples_by_assembly': [
+                {
+                    'assembly_name': item['assembly__name'],
+                    'count': item['count']
+                }
+                for item in samples_by_assembly
+            ],
+            'total_products': total_products
         }
-        serializer = SamplesStatsSerializer(data=data)
-        serializer.is_valid(raise_exception=True)
 
-        return response.Response(
-            data=serializer.validated_data,
-            status=status.HTTP_200_OK,
-        )
+        # Validar e retornar
+        serializer = SamplesStatsSerializer(data=formatted_data)
+        serializer.is_valid(raise_exception=True)
+        return response.Response(serializer.data, status=status.HTTP_200_OK)
+
