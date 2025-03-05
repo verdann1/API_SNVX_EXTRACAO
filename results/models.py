@@ -1,7 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
-from django.utils import timezone
 from samples.models import Sample
 
 SAMPLE_TYPE_CHOICES = (
@@ -14,7 +13,11 @@ SIDE_CHOICES = (
     ('esquerdo', 'Esquerdo'),
 )
 
+
 class Result(models.Model):
+    """
+    Representa os resultados de testes de extração realizados em amostras.
+    """
     sample = models.ForeignKey(
         Sample,
         on_delete=models.PROTECT,
@@ -35,11 +38,11 @@ class Result(models.Model):
     )
     comment = models.TextField(null=True, blank=True)
     sample_taken_datetime = models.DateTimeField(
-        default=timezone.now,  # Valor padrão definido
+        auto_now_add=True,
         help_text='Data e hora de retirada da amostra.'
     )
     sample_extraction_datetime = models.DateTimeField(
-        default=timezone.now,  # Valor padrão definido
+        auto_now=True,
         help_text='Data e hora de extração da amostra.'
     )
     sample_type = models.CharField(
@@ -60,9 +63,13 @@ class Result(models.Model):
     def clean(self):
         super().clean()
         if self.sample_type == 'cone' and self.force_N < 400:
-            raise ValidationError('Alerta: Valor de força para "cone" é menor que 400 N.')
+            raise ValidationError({
+                'force_N': 'A força para "cone" deve ser maior ou igual a 400 N.'
+            })
         if self.sample_type == 'centragem' and self.force_N < 500:
-            raise ValidationError('Alerta: Valor de força para "centragem" é menor que 500 N.')
+            raise ValidationError({
+                'force_N': 'A força para "centragem" deve ser maior ou igual a 500 N.'
+            })
 
     def __str__(self):
         return str(self.sample)
