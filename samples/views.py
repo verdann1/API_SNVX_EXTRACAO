@@ -29,28 +29,24 @@ class SamplesStatsView(views.APIView):
     queryset = Sample.objects.all()
 
     def get(self, request):
-        total_samples = self.queryset.count()
-        samples_by_assembly = self.queryset.values('assembly__name').annotate(
+        # Usar 'assembly__id' em vez de 'assembly__name'
+        samples_by_assembly = Sample.objects.values('assembly__id').annotate(
             count=Count('id')
-        ).order_by('assembly__name')
+        ).order_by('assembly__id')
 
-        # Calcular total de produtos únicos associados a amostras
-        total_products = Product.objects.filter(samples__isnull=False).distinct().count()
-
-        # Formatar dados para o serializer
-        formatted_data = {
-            'total_samples': total_samples,
+        # Formatar dados
+        data = {
+            'total_samples': Sample.objects.count(),
             'samples_by_assembly': [
                 {
-                    'assembly_name': item['assembly__name'],
+                    'assembly_id': item['assembly__id'],  # Renomear para 'assembly_id'
                     'count': item['count']
                 }
                 for item in samples_by_assembly
             ],
-            'total_products': total_products
+            'total_products': Product.objects.filter(samples__isnull=False).distinct().count()
         }
 
-        # Validar e retornar
-        serializer = SamplesStatsSerializer(data=formatted_data)
+        serializer = SamplesStatsSerializer(data=data)
         serializer.is_valid(raise_exception=True)
-        return response.Response(serializer.data, status=status.HTTP_200_OK)
+        return response.Response(serializer.data)
