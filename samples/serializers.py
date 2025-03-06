@@ -51,13 +51,15 @@ class SamplesListDetailSerializer(serializers.ModelSerializer):
 
 class SamplesStatsSerializer(serializers.Serializer):
     total_samples = serializers.IntegerField()
+    total_products = serializers.IntegerField()
+    
+    # Defina explicitamente a estrutura de samples_by_assembly
     samples_by_assembly = serializers.ListField(
         child=serializers.DictField(
-            child=serializers.CharField(),
+            child=serializers.IntegerField(),  # count é numérico
             allow_empty=True
         )
     )
-    total_products = serializers.IntegerField()
 
 class SampleCreateSerializer(serializers.ModelSerializer):
     """

@@ -39,15 +39,12 @@ class SamplesStatsView(views.APIView):
 
         # Formatar dados para o serializer
         formatted_data = {
-            'total_samples': total_samples,
-            'samples_by_assembly': [
-                {
-                    'assembly_name': item['assembly_name'],  # Certifique-se de usar strings aqui
-                    'count': item['count']
-                }
-                for item in samples_by_assembly
-            ],
-            'total_products': total_products
+    'total_samples': total_samples,
+    'samples_by_assembly': [
+        {'assembly_id': item['assembly__id'], 'count': item['count']}  # Use assembly_id
+        for item in samples_by_assembly
+    ],
+    'total_products': total_products
         }
 
         # Validar e retornar
