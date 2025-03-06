@@ -42,7 +42,7 @@ class SamplesStatsView(views.APIView):
             'total_samples': total_samples,
             'samples_by_assembly': [
                 {
-                    'assembly_name': item['assembly_id'],  # Certifique-se de usar strings aqui
+                    'assembly_id': item['assembly_id'],  # Certifique-se de usar strings aqui
                     'count': item['count']
                 }
                 for item in samples_by_assembly
